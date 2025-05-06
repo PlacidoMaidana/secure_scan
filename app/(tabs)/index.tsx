@@ -6,7 +6,31 @@ import ParallaxScrollView from '@/components/ParallaxScrollView';
 import { ThemedText } from '@/components/ThemedText';
 import { ThemedView } from '@/components/ThemedView';
 
+import { Camera, CameraType, CameraView } from 'expo-camera'; // Import CameraType from expo-camera
+
+import { useEffect, useState } from 'react';
+import { Button, Text, View } from 'react-native';
+
+
+
 export default function HomeScreen() {
+  const [hasPermission, setHasPermission] = useState<boolean | null>(null);
+  const [facing, setFacing] = useState<CameraType>('back');
+  const [scanned, setScanned] = useState(false);
+  const [data, setData] = useState('');
+
+  useEffect(() => {
+    (async () => {
+      const permission = await Camera.requestCameraPermissionsAsync();
+      setHasPermission(permission.granted);
+    })();
+    }, []);
+  
+
+  if (hasPermission === null) return <Text>Solicitando permisos...</Text>;
+  if (hasPermission === false) return <Text>Acceso denegado</Text>;
+
+
   return (
     <ParallaxScrollView
       headerBackgroundColor={{ light: '#A1CEDC', dark: '#1D3D47' }}
@@ -16,6 +40,29 @@ export default function HomeScreen() {
           style={styles.reactLogo}
         />
       }>
+
+      <View style={{ flex: 1, alignItems: 'center', justifyContent: 'center' }}>
+        <CameraView
+          style={{ width: '100%', height: 300 }}
+          facing={facing}// Asegúrate de que CameraType esté importado
+          barcodeScannerSettings={{
+            barcodeTypes: ['qr'], // Especifica que solo quieres escanear códigos QR
+          }}
+         
+          onBarcodeScanned={({ data }: { data: string }) => {
+            setScanned(true);
+            setData(data);
+          }}
+          
+        />
+        <Text style={{ marginTop: 20 }}>Código escaneado: {data}</Text>
+        {scanned && <Button title="Escanear otro" onPress={() => setScanned(false)} />}
+      </View>
+
+
+
+
+
       <ThemedView style={styles.titleContainer}>
         <ThemedText type="title">HOLA PATO JAJAJAJ!</ThemedText>
         <HelloWave />
